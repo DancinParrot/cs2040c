@@ -1,0 +1,410 @@
+% Compile with pdfLaTeX. Black-and-white, two-page A4 reference.
+% Tables use core LaTeX tabular; array/tabularx are not required.
+\documentclass[8pt,a4paper]{extarticle}
+\usepackage[margin=7mm,top=7mm,bottom=8mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,xcolor,listings,fancyhdr,microtype}
+\definecolor{navy}{gray}{0}
+\definecolor{teal}{gray}{0}
+\definecolor{pale}{gray}{1}
+\definecolor{grey}{gray}{0}
+\pagestyle{fancy}\fancyhf{}\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\fontsize{6.1}{7}\selectfont CS2040C Quiz 1 | Lecture-based reference | A4: print at 100\%, duplex, long-edge flip}
+\fancyfoot[R]{\fontsize{7}{8}\selectfont\thepage\ / 2}
+\setlength{\footskip}{12pt}\setlength{\parindent}{0pt}\setlength{\parskip}{1.5pt}
+\setlength{\tabcolsep}{2pt}\renewcommand{\arraystretch}{1.13}
+\setlength{\abovedisplayskip}{3pt}\setlength{\belowdisplayskip}{3pt}
+\setlength{\abovedisplayshortskip}{2pt}\setlength{\belowdisplayshortskip}{2pt}
+\lstset{language=C++,basicstyle=\ttfamily\fontsize{6.7}{7.6}\selectfont,keywordstyle=\bfseries\color{navy},commentstyle=\color{grey},columns=fullflexible,keepspaces=true,showstringspaces=false,breaklines=true,aboveskip=2pt,belowskip=2pt,backgroundcolor=\color{pale},frame=none,xleftmargin=3pt,xrightmargin=2pt}
+\newcommand{\sect}[2]{\par\vspace{2pt}{\setlength{\fboxsep}{2.5pt}\fcolorbox{black}{white}{\parbox{\dimexpr\linewidth-5pt-2\fboxrule\relax}{\color{black}\bfseries\fontsize{8.5}{9.5}\selectfont #1\hfill{\fontsize{5.7}{6}\selectfont #2}}}}\par\vspace{1pt}}
+\newcommand{\sub}[1]{\par\textbf{\color{teal}#1}\par}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\note}[1]{\par{\color{navy}\textbf{Watch:} #1}\par}
+\newlength{\tablefixed}
+\newcommand{\colstart}{\begin{minipage}[t]{0.322\textwidth}\vspace{0pt}}
+\newcommand{\colend}{\end{minipage}}
+\newcommand{\titlebar}[2]{{\color{navy}\fontsize{18}{20}\selectfont\bfseries CS2040C\hspace{5pt} QUIZ 1}\hfill{\color{teal}\bfseries #1}\par{\fontsize{7.3}{8.4}\selectfont #2}\vspace{3pt}\hrule\vspace{3pt}}
+\begin{document}\fontsize{7.6}{8.7}\selectfont
+\titlebar{FOUNDATIONS \& ANALYSIS}{Two-page A4 cheatsheet. Code uses zero-based indices; sorting is ascending unless stated. Tight bounds are shown where justified.}
+\noindent\colstart
+\sect{C++: pointers \& parameters}{L01b; W3}
+\code{\&x}: address of \code{x}. \code{*p}: object at \code{p}.\par
+\code{p->m} equals \code{(*p).m}; \code{a[i]} equals \code{*(a+i)}. Pointer arithmetic advances by elements.
+\begin{lstlisting}
+int x = 3;
+int* p = &x;
+int& r = x;     // alias; must initialize
+*p = 5;        // x and r now 5
+p = nullptr;   // changes p, not x
+\end{lstlisting}
+\par\settowidth{\tablefixed}{\code{const T\& x}}
+\begin{tabular}{@{}lp{\dimexpr\linewidth-\tablefixed-2\tabcolsep-2pt\relax}@{}}
+\textbf{Parameter} & \textbf{Effect}\\\hline
+\code{T x} & Copy; changing \code{x} does not change caller.\\
+\code{T* p} & Copy of address; \code{*p} may change caller's object.\\
+\code{T\& x} & Alias; may change caller's object.\\
+\code{const T\& x} & No object copy; no mutation through \code{x}.\\
+\end{tabular}\par
+To change the caller's pointer itself, use \code{T*\& p} (or a pointer to pointer). Arrays passed as \code{T a[]} act as pointers; pass length separately.
+\sub{Allocation \& lifetime}
+\begin{lstlisting}
+T* p = new T(...);  delete p;
+T* a = new T[n];    delete[] a;
+p = nullptr; a = nullptr;
+\end{lstlisting}
+Local objects are destroyed at scope exit. Dynamically allocated objects live until deleted. Declaring \code{T* p;} creates a pointer, not a \code{T} object.
+\note{Never dereference null/uninitialized/dangling pointers. Do not use an object after deletion, double-delete, or delete a local stack object. Losing the last owning pointer leaks memory.}
+\sect{Classes \& inheritance}{L01b; L02a/d}
+\textbf{Class}: blueprint; \textbf{object}: instance. Encapsulation exposes an interface while hiding state.
+\par\settowidth{\tablefixed}{\code{protected}}
+\begin{tabular}{@{}lp{\dimexpr\linewidth-\tablefixed-2\tabcolsep-2pt\relax}@{}}
+\code{public} & Accessible to clients.\\
+\code{private} & Class members and declared friends.\\
+\code{protected} & Also accessible to derived classes.\\
+\end{tabular}\par
+Default member access: \code{class} private; \code{struct} public. A derived class cannot directly access base private members merely by inheritance.
+\code{friend class B;} inside \code{A} grants \code{B} access to \code{A}'s private/protected members. Friendship is not automatically mutual or transitive.
+\sub{Construction, destruction, copying}
+\code{C(...)}: constructor, no return type, overloadable; Can have \textbf{multiple} \par
+\code{\textasciitilde C()}: destructor, no return type/arguments; Only \textbf{ONE} can exist.\par
+\code{C(const C\& other)}: copy constructor. Implicit copying copies pointer values, not pointed-to nodes: owning lists need deep copying (and correct assignment/destruction) to avoid shared ownership errors.
+\sub{Overloading vs overriding}
+\textbf{Overload}: same name, different parameter number/types; return type alone is insufficient.\par
+\textbf{Override}: derived implementation of a virtual base method. Through a base pointer/reference, virtual calls select the actual object's method; nonvirtual calls use the static type. \code{Base::f()} explicitly calls the base method.
+\begin{lstlisting}
+class Base {
+public:
+  virtual void f();
+  virtual ~Base() {}
+};
+class Child : public Base {
+public: void f() override;
+};
+\end{lstlisting}
+\sect{Templates \& operators}{W4--5}
+\begin{lstlisting}
+template<class T>
+void mySwap(T& a, T& b) {
+  T t = a; a = b; b = t;
+}
+bool Food::operator>(const Food& f)
+  { return _cal > f._cal; }
+\end{lstlisting}
+\code{a+b} can call \code{a.operator+(b)}. Returning a new object need not modify either input. Stream \code{operator<<} returns \code{ostream\&} for chaining. Template definitions must be visible where instantiated (usually header/\code{.hpp}).
+\colend\hfill
+\colstart
+\sect{Linked-list costs}{L02a; W3--5}
+Singly linked node: item + \code{next}. Empty: \code{head==nullptr}; last node's \code{next==nullptr}. Doubly linked adds \code{prev}; circular links the last node back to the first.
+\par\settowidth{\tablefixed}{\begin{tabular}{@{}ccc@{}}\textbf{Array}&$\Theta(1)$&$\Theta(1)$\end{tabular}}\addtolength{\tablefixed}{3pt}
+\begin{tabular}{@{}p{\dimexpr\linewidth-\tablefixed-2\tabcolsep-2pt\relax}ccc@{}}
+\textbf{Operation} & \textbf{Array} & \textbf{SLL} & \textbf{DLL}\\\hline
+Index access & $\Theta(1)$ & $O(n)$ & $O(n)$\\
+Search (unsorted) & $O(n)$ & $O(n)$ & $O(n)$\\
+Insert/remove head & $O(n)$ & $\Theta(1)$ & $\Theta(1)$\\
+Append with tail* & $\Theta(1)$ & $\Theta(1)$ & $\Theta(1)$\\
+Remove tail & $\Theta(1)$ & $O(n)$ & $\Theta(1)$\\
+\end{tabular}\par
+*Array has spare capacity; lists maintain a tail pointer. DLL tail removal assumes a tail pointer. Array head deletion preserves order. SLL tail deletion still needs the predecessor.
+\textbf{Known location:} SLL insertion after a node or deletion after a predecessor is $\Theta(1)$. DLL deletion of a known node is $\Theta(1)$. Finding that location may cost $\Theta(n)$.
+\sub{Safe head operations (size counter \code{sz})}
+\begin{lstlisting}
+// push_head(x)
+Node* t = new Node(x);
+t->next = head; head = t;
+if (!tail) tail = t;
+++sz;
+
+// pop_head(): require head != nullptr
+Node* t = head;
+T x = t->item;
+head = head->next;
+if (!head) tail = nullptr;
+delete t; --sz;
+return x;
+\end{lstlisting}
+Destructor: repeatedly remove head, $\Theta(n)$. Handle empty/singleton cases; update head, tail and size consistently. Repeated head insertion reverses input order.
+\sub{Reverse links: $\Theta(n)$ time, $\Theta(1)$ space}
+\begin{lstlisting}
+Node* prev = nullptr;
+Node* cur = head;
+tail = head;
+while (cur) {
+  Node* nxt = cur->next;
+  cur->next = prev;
+  prev = cur; cur = nxt;
+}
+head = prev;
+\end{lstlisting}
+\textbf{extractMax}: scan with current/predecessor and best/predecessor, unlink best, return item: $\Theta(n)$. Use strict \code{>} to keep the first equal maximum. Repeating extraction costs $\Theta(n^2)$; printing maxima gives descending order, prepending them gives ascending order.
+\sect{ADTs \& representations}{L02d; W6}
+\textbf{ADT} specifies operations and behavior; a data structure implements them. Same ADT can have different costs with different representations.
+\textbf{Stack (LIFO)}: push/pop at head, $\Theta(1)$.\par
+\textbf{Queue (FIFO)}: enqueue at tail, dequeue at head, $\Theta(1)$ with both pointers.\par
+\textbf{List}: sequence with positional access/updates.\par
+\textbf{Dictionary}: key--value insert, search, delete, predecessor/successor. \textbf{Set}: unique elements.
+\textbf{Set representations:} unsorted array membership $O(n)$; sorted array membership $O(\log n)$ but insertion/deletion $O(n)$. Merging two sorted sets supports union/intersection/difference in $O(n+m)$. Unsorted membership checks can take $O(nm)$. Unsorted append is constant only if spare capacity and no duplicate check is needed.
+\sect{Searching}{L03a}
+Linear search: best $\Theta(1)$, worst $\Theta(n)$.\par
+Binary search needs a \textbf{sorted random-access array}: worst $\Theta(\log n)$; iterative extra space $\Theta(1)$.
+\begin{lstlisting}
+// search range [lo, hi)
+int lo = 0, hi = n;
+while (lo < hi) {
+  int m = lo + (hi-lo)/2;
+  if (A[m] == key) return m;
+  if (key < A[m]) hi = m;
+  else lo = m + 1;
+}
+return -1;
+\end{lstlisting}
+A linked-list midpoint needs linear traversal: halving its range does not imply logarithmic total time.
+\colend\hfill
+\colstart
+\sect{Asymptotic bounds}{L03a; TC notes}
+For sufficiently large $n\ge n_0$ and positive constants:
+\par\settowidth{\tablefixed}{$T\in\Omega(f)$}
+\begin{tabular}{@{}lp{\dimexpr\linewidth-\tablefixed-2\tabcolsep-2pt\relax}@{}}
+$T\in O(f)$ & Upper bound: $0\le T(n)\le cf(n)$.\\
+$T\in\Omega(f)$ & Lower bound: $0\le cf(n)\le T(n)$.\\
+$T\in\Theta(f)$ & Tight: $c_1f(n)\le T(n)\le c_2f(n)$.\\
+\end{tabular}\par
+$f\in O(g)\iff g\in\Omega(f)$. A linear function is also $O(n^2)$, but not $\Theta(n^2)$. \textbf{Bound type and input case are separate}: $O$ does not mean ``worst case'' and $\Omega$ does not mean ``best case''.
+\[
+1\prec\log n\prec\sqrt n\prec n\prec n\log n\prec n^2\prec 2^n\prec n!
+\]
+Drop fixed factors/lower terms \textbf{after counting}. Log bases differ by a constant: $\log_b n=\log_a n/\log_a b$.
+\sub{Combine actual costs}
+Sequential blocks: add; independent nested work: multiply; dependent bounds: \textbf{sum per iteration}. A worst-case branch bound includes condition cost plus the most expensive feasible branch. Check termination first.
+\sub{Useful sums}
+$\sum_{i=1}^{n}1=n$;\quad $\sum_{i=1}^{n}i=\frac{n(n+1)}2$.\par
+$\sum_{i=0}^{k}r^i=\frac{r^{k+1}-1}{r-1}$\quad$(r\ne1)$.\par
+$\sum_{i=0}^{\lfloor\log_2 n\rfloor}2^i=\Theta(n)$;\quad
+$\sum_{i\ge0}n/2^i=\Theta(n)$.\par
+$\sum_{i=1}^{n}\frac1i=\Theta(\log n)$.
+\sect{Loop patterns \& traps}{W5--6}
+Assume constant-time bodies and positive $n$.
+\par\settowidth{\tablefixed}{$\Theta(n\log n)$}\addtolength{\tablefixed}{9pt}
+\begin{tabular}{@{}p{\dimexpr\linewidth-\tablefixed-2\tabcolsep-2pt\relax}l@{}}
+\textbf{Pattern} & \textbf{Tight time}\\\hline
+\code{i=0; i<n; i+=100} & $\Theta(n)$\\
+\code{i=1; i<n; i*=2} & $\Theta(\log n)$\\
+\code{i=0; i<n*n; i+=2*n} & $\Theta(n)$\\
+\code{i=1; i<n; i+=n/10+1} & $\Theta(1)$\\
+Outer $n$; inner $n/2$ & $\Theta(n^2)$\\
+Outer $i=1,\ldots,n$; inner $i$ & $\Theta(n^2)$\\
+Outer doubles; inner runs $n$ & $\Theta(n\log n)$\\
+Outer doubles; inner runs $i$ & $\Theta(n)$\\
+Outer doubles; inner steps by $i$ to $n$ & $\Theta(n)$\\
+Outer $i=1,\ldots,n$; inner steps by $i$ to $n$ & $\Theta(n\log n)$\\
+\end{tabular}\par
+\note{\code{j=0; j<n; j*=2} never advances for $n>0$. Uninitialized indices give undefined behavior.}
+\textbf{Changing bound:} start $k=n$, repeatedly halve $k$, then run $k$ inner iterations. Total inner work $n/2+n/4+\cdots=\Theta(n)$, even if the outer loop executes $n$ times (include its $\Theta(n)$ overhead).
+\textbf{Why not multiply loose bounds?}\par
+For $i=1,2,4,\ldots<n$, each inner cost $n/i$: $ \theta \left(n\right)$, see \textbf{Useful sums} formula for $n/2^i$.
+Calling every inner loop $O(n)$ gives a valid but loose $O(n\log n)$ bound.
+\textbf{W6 triple loop:} $i$ doubles, $j$ steps by $i$, and $k=0,\ldots,j-1$. For fixed $i$, work is $\Theta(n^2/i)$; summing geometric terms gives $\Theta(n^2)$.
+\sect{Recursion: Master Theorem}{L03--05; W6}
+$$T(n)=aT(n/b)+\Theta(n^d)$$
+$$
+\begin{array}{|l|l|}
+\hline
+\textbf{Shrink} & \textbf{Result} \\
+\hline
+\text{Divide } (n/2, n/3) & \log n \text{ involved} \\
+\text{Subtract } (n-1, n-2) & \text{exponential or factorial} \\
+\hline
+\textbf{Branches} & \textbf{Result (Big-O)} \\
+\hline
+1 + \text{divide} & \log n \\
+2 + \text{divide} & n\log n \text{ or } n \\
+2 + \text{subtract} & 2^n \\
+k + \text{subtract} & k^n (k \geq 2, k = 1 \vdash n) \\
+\hline
+\textbf{Case} & \textbf{Result} \\
+\hline
+a < b^d & O(n^d) \\
+a = b^d & O(n^d \log n) \\
+a > b^d & O(n^{\log_b a}) \\
+\hline
+\end{array}
+$$
+\par\settowidth{\tablefixed}{$\Theta(n\log n)$}
+\begin{tabular}{@{}p{\dimexpr\linewidth-\tablefixed-2\tabcolsep-2pt\relax}l@{}}
+\textbf{Recurrence} & \textbf{Time}\\\hline
+$T(n)=T(n-c)+\Theta(1)$ & $\Theta(n)$\\
+$T(n)=T(n-c)+\Theta(n)$ & $\Theta(n^2)$\\
+$T(n)=T(n/b)+\Theta(1)$ & $\Theta(\log n)$\\
+$T(n)=T(n/b)+\Theta(n)$ & $\Theta(n)$\\
+$T(n)=2T(n/2)+\Theta(n)$ & $\Theta(n\log n)$\\
+$T(n)=10T(n/10)+\Theta(n)$ & $\Theta(n\log n)$\\
+$T(n)=3T(n/5)+\Theta(1)$ & $\Theta(n^{\log_5 3})$\\
+$T(n)=2T(n-1)+\Theta(1)$ & $\Theta(2^n)$\\
+\end{tabular}\par
+
+\colend
+\newpage
+\titlebar{SORTING \& TREES}{Use the exact algorithm variant in the question. A completed-pass invariant may not hold halfway through a swap, shift, or partition.}
+\noindent\colstart
+\sect{Sorting comparison}{L04 BSIM; L04b; L05}
+All entries below are $\Theta(\cdot)$; average assumes a random order, or random pivots for QuickSort. QuickSort row assumes distinct keys and ordinary two-way recursion.
+\par\settowidth{\tablefixed}{\begin{tabular}{@{}ccc@{}}\textbf{Best}&\textbf{Average}&\textbf{Worst}\end{tabular}}\addtolength{\tablefixed}{5pt}
+\begin{tabular}{@{}p{\dimexpr\linewidth-\tablefixed-2\tabcolsep-2pt\relax}ccc@{}}
+\textbf{Algorithm} & \textbf{Best} & \textbf{Average} & \textbf{Worst}\\\hline
+Bubble (early exit) & $n$ & $n^2$ & $n^2$\\
+Selection & $n^2$ & $n^2$ & $n^2$\\
+Insertion & $n$ & $n^2$ & $n^2$\\
+Merge & $n\log n$ & $n\log n$ & $n\log n$\\
+Quick & $n\log n$ & $n\log n$ & $n^2$\\
+\end{tabular}\par
+\par\settowidth{\tablefixed}{\begin{tabular}{@{}lc@{}}\textbf{Extra space}&\textbf{Stable?}\end{tabular}}
+\begin{tabular}{@{}p{\dimexpr\linewidth-\tablefixed-2\tabcolsep-2pt\relax}lc@{}}
+\textbf{Algorithm} & \textbf{Extra space} & \textbf{Stable?}\\\hline
+Bubble / Insertion & $\Theta(1)$ & Yes\\
+Selection (swap) & $\Theta(1)$ & No\\
+Merge (array) & $\Theta(n)$ & Yes*\\
+Quick (expected) & $O(\log n)$ & No\\
+Quick (worst) & $O(n)$ & No\\
+\end{tabular}\par
+*Merge must take from the left on ties. Bubble/Insertion use strict \code{>} for swaps/shifts. QuickSort partition itself uses $\Theta(1)$ extra space; recursion adds stack space. Fixed-pass BubbleSort has $\Theta(n^2)$ best time too.
+\textbf{Stable}: equal-key records retain relative input order. Example: $[2_a,2_b,1]$ becomes $[1,2_b,2_a]$ after selection's first swap: unstable.
+\sect{Sorting invariants}{Detective; W5}
+Let $A^0$ be the original input. After $k$ completed passes in the usual ascending versions:
+\sub{\underline{Bubble: fixed largest suffix/last k fixed}}
+Left-to-right \textbf{adjacent comparisons} move a maximum to the end. Last $k$ entries are the $k$ largest, in final positions. A small value moves left at most one place per pass. \textbf{(scramble head)}
+\sub{\underline{Selection: fixed smallest prefix/first k fixed}}
+First $k$ entries are the $k$ smallest overall, sorted and already in final positions. Remaining entries may be rearranged by long-distance swaps. \textbf{(scramble tail)}
+\sub{\underline{Insertion: sorted original prefix}}
+First $k+1$ entries are a sorted permutation of $A^0[0..k]$. Suffix $A[k+1..n-1]$ is unchanged. Prefix elements need \textbf{not} be the smallest overall or in final positions.
+\note{Both selection and insertion have sorted prefixes. Check \emph{which elements} the prefix contains and whether the untouched suffix matches the original.}
+\sub{\underline{Merge: sorted blocks}}
+Completed merges create sorted runs within their original subarray boundaries. Bottom-up run lengths double; top-down recursion may leave mixed run sizes. No global rank prefix/suffix is required.
+\sub{\underline{Quick: pivot-separated regions}}
+After partition, everything to a pivot's left is $\le$ it and everything to its right is $\ge$ it. Pivot is in a valid final position, though regions may remain unsorted. Being in the correct index alone does not prove an element was a pivot.
+\textbf{Worksheet key:} A = Insertion; B = Selection; C = Bubble; D = Merge; E = Quick (first pivot Carol).
+\sect{Insertion \& selection kernels}{L04 BSIM}
+\begin{lstlisting}
+// insertion: prefix grows by one
+for (int j=1; j<n; ++j) {
+  auto key=A[j]; int i=j-1;
+  while (i>=0 && A[i]>key) {
+    A[i+1]=A[i]; --i;
+  }
+  A[i+1]=key;
+}
+// selection: choose suffix minimum
+for (int j=0; j<n-1; ++j) {
+  int k=j;
+  for (int i=j+1; i<n; ++i)
+    if (A[i]<A[k]) k=i;
+  swap(A[j], A[k]);
+}
+\end{lstlisting}
+Selection: $n(n-1)/2$ key comparisons; at most $n-1$ nontrivial swaps. Insertion shifts once per inversion (a pair $i<j$ with $A[i]>A[j]$); efficient for nearly sorted/small inputs.
+\colend\hfill
+\colstart
+\sect{MergeSort}{L04 BSIM; W6}
+Divide into halves; recursively sort each; merge using two pointers: take the smaller front, then append leftovers. Take \textbf{left on equality} for stability.
+Merge lengths $a,b$: $\Theta(a+b)$ time, at most $a+b-1$ key comparisons if both nonempty.
+\[
+T(n)=2T(n/2)+\Theta(n)=\Theta(n\log n).
+\]
+There are $\Theta(\log n)$ levels and $\Theta(n)$ work per full level. Reuse/free temporary arrays: peak space $\Theta(n)$, not the $\Theta(n\log n)$ cumulative allocation/work.
+\textbf{Linked-list MergeSort}: find middle with slow/fast pointers, split links, sort both, merge by relinking. Still $\Theta(n\log n)$ time; $O(1)$ merge workspace with iterative merge, plus $O(\log n)$ recursive call stack.
+\sect{QuickSort \& partition}{L04b QSort}
+Choose pivot; partition; recursively sort strict left/right parts; no merge needed. Base case: subarray size at most one, including empty.
+\textbf{Lecture partition, distinct keys:} first pivot; scan low rightwards past smaller values and high leftwards past larger ones; swap misplaced items; finally move pivot to boundary. One partition is $\Theta(n)$.
+\textbf{Duplicates:} strict scans may stop on equal values and repeatedly swap without advancing. Ensure progress; grouping all equals also avoids recurring on them.
+\sub{Three-way variant (inclusive range)}
+This compact implementation groups $<v$, $=v$, $>v$. Its exact intermediate array can differ from the lecture's two-pointer/pack-duplicates version.
+\begin{lstlisting}
+void quick(A, int l, int r) { // pseudo-C++
+  if (l >= r) return;
+  auto v=A[l]; // copy pivot value
+  int lt=l, i=l+1, gt=r;
+  while (i <= gt) {
+    if (A[i] < v) {
+      swap(A[lt],A[i]); ++lt; ++i;
+    } else if (A[i] > v) {
+      swap(A[i],A[gt]); --gt;
+    } else ++i;
+  }
+  quick(A,l,lt-1);
+  quick(A,gt+1,r);
+}
+\end{lstlisting}
+Loop regions: $A[l..lt-1]<v$; $A[lt..i-1]=v$; $A[i..gt]$ unknown; $A[gt+1..r]>v$. After swapping with \code{gt}, do not increment \code{i}: the incoming item is unexamined. All-equal input takes $\Theta(n)$ with three-way grouping.
+\sect{QuickSort analysis}{L05; W6}
+For distinct keys with pivot rank $p+1$:
+\[
+T(n)=T(p)+T(n-p-1)+\Theta(n).
+\]
+\textbf{Balanced:} $2T(n/2)+\Theta(n)=\Theta(n\log n)$.\par
+\textbf{Worst:} pivot repeatedly min/max:
+$T(n)=T(n-1)+\Theta(n)=\Theta(n^2)$. Sorted/reversed input is bad for first/last pivot. A middle-index pivot is not necessarily the median.
+\textbf{Constant-fraction split:} even $1:9$ is enough:
+$T(n)=T(n/10)+T(9n/10)+\Theta(n)=\Theta(n\log n)$.
+Longest path obeys $n(9/10)^h\approx1$, hence $h=\Theta(\log n)$.
+\textbf{Random pivot}: expected $\Theta(n\log n)$ for each distinct-key input, but worst $\Theta(n^2)$ remains. Randomized analysis averages algorithm choices; average-case analysis averages an input distribution.
+\textbf{Paranoid QuickSort}: retry until pivot rank lies in the middle $80\%$ (roughly). Good-pivot probability $p\approx0.8$; expected trials $1/p\approx1.25$; expected partition work $\Theta(n)$.
+\note{Each side needs a constant \emph{fraction} of $n$, not merely a constant number of elements. Expected trials are not a guaranteed maximum.}
+For independent trials with fixed success probability $p$: expected successes in $m$ trials $=mp$; expected trials until first success $=1/p$.
+\sect{Selection \& matching applications}{W6}
+\textbf{QuickSelect}: partition, then recurse only into the side containing target index $k-1$ for the $k$th smallest. Expected $\Theta(n)$; worst $\Theta(n^2)$. Balanced recurrence: $T(n)=T(n/2)+\Theta(n)$. Skip equal block in a three-way implementation.
+\textbf{Children/shoes}: random child partitions shoes; matching shoe partitions children; recurse on corresponding smaller/larger groups. Expected $O(n\log n)$, worst $O(n^2)$, assuming distinct matching sizes.
+\colend\hfill
+\colstart
+\sect{Trees \& BSTs}{L05c Tree Def/Traversal}
+\textbf{Root}: no parent. \textbf{Leaf}: no children. \textbf{Siblings}: same parent. \textbf{Subtree}: a node and all descendants. Binary tree: each node has at most two children (left/right); either subtree may be empty.
+\textbf{Depth}: edges from root; root depth $0$.\par
+\textbf{Height}: longest downward path in edges:
+\[
+h(\varnothing)=-1,\quad h(v)=1+\max(h(v_L),h(v_R)).
+\]
+Leaf height $0$. A skewed tree has height $n-1$; a balanced tree has height $O(\log n)$. Computing height from scratch visits the whole subtree: $\Theta(n)$.
+\sub{BST ordering is global within subtrees}
+All keys in the left subtree $<v.key<$ all keys in the right subtree (distinct-key convention). Checking only immediate children is insufficient. Insertion order determines shape; identical keys can yield different shapes.
+\textbf{Search/insert}: compare at root, go left for smaller, right for larger; insert at the missing child position. Equality follows the chosen duplicate policy.
+\textbf{Min/max}: follow left/right links respectively.\par
+\textbf{Cost}: search, insert, min/max, successor/predecessor take $O(h+1)$: balanced $O(\log n)$, skewed $O(n)$. An ordinary BST is \textbf{not automatically balanced}.
+\sub{Successor / predecessor}
+Successor of key $x$ is the smallest key strictly $>x$. If a present node has a right subtree, use its minimum; otherwise use the lowest ancestor whose left subtree contains that node.
+\begin{lstlisting}
+// works even when x is absent
+Node* ans=nullptr;
+Node* cur=root;
+while (cur) {
+  if (cur->key > x) {
+    ans=cur; cur=cur->left;
+  } else cur=cur->right;
+}
+return ans; // nullptr if no successor
+\end{lstlisting}
+Predecessor is symmetric: largest key $<x$; left-subtree maximum, or last candidate when moving right.
+\sect{Traversal orders}{L05c}
+Every recursive traversal starts: if node is null, return. Let N = visit node, L/R = traverse subtree.
+\par\begin{tabular}{@{}lcl@{}}
+\textbf{Traversal} & \textbf{Order} & \textbf{Use / property}\\\hline
+Preorder & N L R & Root appears first\\
+Inorder & L N R & BST keys ascending (sorted)\\
+Postorder & L R N & Children before parent\\
+Level order & BFS & Queue, left then right\\
+\end{tabular}\par
+All \textbf{traversals}/visit $n$ nodes in $\Theta(n)$ time. DFS recursion uses $O(h+1)$ space. Level order uses $O(w)$ queue space, where $w$ is maximum width.
+\sect{Peak finding}{L03a; TC notes}
+\textbf{1D peak}: $A[i]\ge A[i-1],A[i+1]$; use virtual boundaries $A[-1]=A[n]=-\infty$. Check middle; if not a peak, recurse toward a \emph{larger neighbor}. Either larger side contains a peak. Worst $O(\log n)$; array need not be sorted.
+\textbf{Global maximum}: unsorted $\Theta(n)$; sorted ascending $\Theta(1)$ by returning last element.
+\textbf{2D, $n$ rows and $m$ columns}: compare direct up/down/left/right neighbors. Use non-strict peaks, or distinct values for strict peaks. Form column global maxima and seek a 1D peak among them.
+Compute all columns first: $O(nm)$. Evaluate only columns examined by binary peak finding: $O(n\log m)$ for $m\ge2$ ($O(n)$ when $m=1$). Arbitrary \emph{local} column maxima do not suffice.
+\sect{Two-stack sorting pattern}{W6 Quiz 1}
+Head is stack top; \code{print()} traverses head to tail. To make \code{L2} ascending:
+\begin{lstlisting}
+while (!L1.empty()) {
+  int x=L1.pop_head();
+  while (!L2.empty() && L2.head()<x)
+    L1.push_head(L2.pop_head());
+  L2.push_head(x);
+}
+\end{lstlisting}
+Move smaller items aside before prepending a larger item. \code{L2} stays ascending from head to tail. Worst $\Theta(n^2)$ time; only constant temporary storage beyond the two lists.
+\colend
+\end{document}
