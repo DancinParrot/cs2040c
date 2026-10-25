@@ -1,0 +1,45 @@
+push_tail_test1()
+[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+
+push_tail_test2()
+[7,8,9,10,11,12,13,14,15,16]
+
+1111222233334444 create the linked list in SuperLongInt as [4444,3333,2222,1111]
+With to_string() output: 1111222233334444
+91111222233334444 create the linked list in SuperLongInt as [4444,3333,2222,1111,9]
+With to_string() output: 91111222233334444
+123450009 create the linked list in SuperLongInt as [9,2345,1]
+With to_string() output: 123450009
+
+
+a = a.to_string() :101          b = b.to_string() :102
+c = a + b and c.to_string():203   with c.showList():[203]
+
+a = a.to_string() :10001          b = b.to_string() :4
+c = a + b and c.to_string():5   with c.showList():[5]
+
+a = a.to_string() :5          b = b.to_string() :10001
+c = a + b and c.to_string():6   with c.showList():[6]
+
+a = a.to_string() :98765          b = b.to_string() :12345
+c = a + b and c.to_string():111110   with c.showList():[1110,11]
+
+a = a.to_string() :9999          b = b.to_string() :1
+c = a + b and c.to_string():000-1   with c.showList():[-1,0]
+
+a = a.to_string() :1          b = b.to_string() :9999
+c = a + b and c.to_string():000-1   with c.showList():[-1,0]
+
+a = a.to_string() :1999999999          b = b.to_string() :1
+c = a + b and c.to_string():000-1   with c.showList():[-1,0]
+
+a = a.to_string() :19999999999999999          b = b.to_string() :1
+c = a + b and c.to_string():000-1   with c.showList():[-1,0]
+
+a = a.to_string() :1234567890123456789          b = b.to_string() :9876543210987654321
+c = a + b and c.to_string():11111111101111111110   with c.showList():[1110,1111,1011,1111,1111]
+
+By normal inaccurate calculation: 9999999999999999999+9999999999999999999=1553255926290448382
+By SuperLongInt: 9999999999999999999+9999999999999999999=19999999999999999998
+
+

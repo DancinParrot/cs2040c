@@ -1,12 +1,29 @@
-
 #include "LinkedList.h"
 #include "SuperLongInt.h"
+#include <gtest/gtest.h>
 #include <iostream>
 
 void push_tail_test1();
 void push_tail_test2();
 
-int main() {
+namespace {
+
+TEST(Part1, DefaultAdditionTest) {
+  SuperLongInt a(9999999999999999999);
+  SuperLongInt b(a, a);
+  EXPECT_EQ(b.to_string(), "19999999999999999998");
+}
+
+TEST(Part1, AdditionTest2) {
+  SuperLongInt a(1234567891234567891);
+  SuperLongInt b(a, a);
+  EXPECT_EQ(b.to_string(), "2469135782469135782");
+}
+} // namespace
+
+int main(int argc, char **argv) {
+  // ::testing::InitGoogleTest(&argc, argv);
+  // return RUN_ALL_TESTS();
   push_tail_test1();
   push_tail_test2();
 

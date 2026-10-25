@@ -1,6 +1,4 @@
 #include "SuperLongInt.h"
-#include <algorithm>
-#include <numeric>
 #include <vector>
 
 //////////////////////////////////////////////////////////////////
@@ -76,5 +74,23 @@ SuperLongInt::SuperLongInt(unsigned long long int i) {
 };
 
 SuperLongInt::SuperLongInt(SuperLongInt a, SuperLongInt b) {
+  Node *a_cur = a._l.m_head;
+  Node *b_cur = b._l.m_head;
 
+  while (a_cur && b_cur) {
+    // NOTE: What if 9000 will be stored as [9]?
+    // if got result in 1 more digit, then add to next
+    int rounding = 0;
+    if (_l.m_head && (_l.m_head->element == -1)) {
+      _l.pop_head();
+      rounding = 1;
+    }
+    int sum = a_cur->element + b_cur->element + rounding;
+    _l.push_tail(sum % 10000);
+    if (sum / 10000 != 0) {
+      _l.push_head(-1);
+    }
+    a_cur = a_cur->next;
+    b_cur = b_cur->next;
+  }
 };
