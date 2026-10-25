@@ -10,7 +10,7 @@ private:
 
 public:
   UnionFind();
-  UnionFind(std::initializer_list<T> init_list);
+  UnionFind(std::vector<T> init_list);
   T find(T element);
   void unionSets(T a, T b);
 };
@@ -18,7 +18,7 @@ public:
 template <typename T> UnionFind<T>::UnionFind() : _parent{} {}
 
 template <typename T>
-UnionFind<T>::UnionFind(std::initializer_list<T> init_list) : _parent{} {
+UnionFind<T>::UnionFind(std::vector<T> init_list) : _parent{} {
   // Every node's parent is itself at first
   _parent.resize(init_list.size());
   _rank.resize(init_list.size(), 1);
